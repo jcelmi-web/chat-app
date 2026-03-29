@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Test</title>
+</head>
+<body>
+
+<h1>Chat en tiempo real</h1>
+
+<input id="user" placeholder="Usuario">
+<input id="message" placeholder="Mensaje">
+<button onclick="sendMessage()">Enviar</button>
+
+<ul id="chat"></ul>
+
+<script type="module">
+import Echo from 'https://cdn.skypack.dev/laravel-echo';
+import Pusher from 'https://cdn.skypack.dev/pusher-js';
+
+window.Pusher = Pusher;
+
+const echo = new Echo({
+    broadcaster: 'reverb',
+    key: 'uof9wg1xp3cgkbdqf3er',
+    wsHost: '127.0.0.1',
+    wsPort: 8080,
+    forceTLS: false,
+    enabledTransports: ['ws'],
+});
+
+window.Echo = echo;
+
+// escuchar mensajes en tiempo real
+echo.channel('chat')
+    .listen('MessageSent', (e) => {
+        console.log('🔥 Evento recibido:', e);
+
+        const li = document.createElement('li');
+        li.innerText = e.user + ': ' + e.message;
+
+        document.getElementById('chat').appendChild(li);
+    });
+
+// enviar mensaje
+window.sendMessage = async function () {
+    const user = document.getElementById('user').value;
+    const message = document.getElementById('message').value;
+
+    try {
+        const res = await fetch('http://127.0.0.1:8000/api/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user, message })
+        });
+
+        const data = await res.json();
+        console.log('Respuesta:', data);
+
+    } catch (err) {
+        console.error('Error enviando mensaje:', err);
+    }
+};
+</script>
+
+</body>
+</html>
