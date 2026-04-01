@@ -1,6 +1,6 @@
 FROM php:8.4-cli
 
-# Dependencias del sistema
+# Dependencias del sistema (IMPORTANTE añadir autoconf, gcc, make)
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -9,23 +9,28 @@ RUN apt-get update && apt-get install -y \
     zip \
     libssl-dev \
     pkg-config \
-    libcurl4-openssl-dev
+    libcurl4-openssl-dev \
+    libonig-dev \
+    libxml2-dev \
+    autoconf \
+    g++ \
+    make
 
-# Extensiones PHP necesarias
+# Extensiones PHP
 RUN docker-php-ext-install pdo pdo_mysql zip
 
-# Instalar MongoDB extension
+# MongoDB extension (con build tools disponibles)
 RUN pecl install mongodb \
     && docker-php-ext-enable mongodb
 
-# Instalar Composer
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
 COPY . .
 
-# Instalar dependencias ignorando platform req (por seguridad en build)
+# Instalar dependencias
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 EXPOSE 8000
