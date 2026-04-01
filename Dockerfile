@@ -1,15 +1,22 @@
-FROM php:8.3-cli
+FROM php:8.4-cli
 
-# Instalar dependencias del sistema
+# Dependencias del sistema
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
     libzip-dev \
-    zip
+    zip \
+    libssl-dev \
+    pkg-config \
+    libcurl4-openssl-dev
 
-# Instalar extensiones PHP
+# Extensiones PHP necesarias
 RUN docker-php-ext-install pdo pdo_mysql zip
+
+# Instalar MongoDB extension
+RUN pecl install mongodb \
+    && docker-php-ext-enable mongodb
 
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -18,7 +25,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader
+# Instalar dependencias ignorando platform req (por seguridad en build)
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 EXPOSE 8000
 
